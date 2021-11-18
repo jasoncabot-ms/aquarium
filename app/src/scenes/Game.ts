@@ -109,12 +109,12 @@ class Game extends Phaser.Scene {
   }
 
   addRandomBubbles = () => {
-    for (let bubbleCount = 0; bubbleCount < Phaser.Math.Between(0, 20); bubbleCount++) {
+    for (let bubbleCount = 0; bubbleCount < Phaser.Math.Between(0, 50); bubbleCount++) {
       const pt = this.cameras.main.worldView.getRandomPoint();
       const size = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2][Phaser.Math.Between(0, 14)];
       const bubble = this.physics.add.image(pt.x, pt.y, 'bg-bubble')
         .setScale(size)
-        .setVelocityY(-20)
+        .setVelocityY(-[15, 30, 60][size])
         .setGravityY(-(32 / [1, 2, 4][size]))
         .setAlpha(0.4)
         .setScrollFactor(1.0 - (size * 0.1));
@@ -122,7 +122,9 @@ class Game extends Phaser.Scene {
       this.tweens.add({
         targets: bubble,
         duration: Phaser.Math.Between(250, 2000),
-        alpha: { value: 1 },
+        yoyo: true,
+        alpha: { value: 1, ease: 'Power1' },
+        onComplete: () => { bubble.destroy() }
       });
     }
   }
