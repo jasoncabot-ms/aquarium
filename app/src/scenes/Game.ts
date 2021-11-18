@@ -30,6 +30,7 @@ class Game extends Phaser.Scene {
   preload() {
     this.load.spritesheet('bubbles', 'assets/bubbles.png', { frameWidth: 394, frameHeight: 512 });
     this.load.atlas('seacreatures', 'assets/seacreatures.png', 'assets/seacreatures.json');
+    this.load.image('bg-bubble', "assets/bubble_bg.png");
   }
 
   create() {
@@ -82,17 +83,15 @@ class Game extends Phaser.Scene {
     this.timer = this.time.addEvent({
       delay: 500,
       callback: (scene: Phaser.Scene) => {
-        const generated = Phaser.Math.Between(0, 100);
-        if (generated > 25) return; // %-chance of showing a bubble
-        const random = scene.cameras.main.worldView.getRandomPoint();
-        scene.add.sprite(random.x, random.y, "bubbles").play("pop").setScale(0.2);
+        this.addRandomBubbles();
       },
-      args: [this],
+      args: [],
       repeat: -1
     });
   }
 
   destroy() {
+    this.gameDispatcher.off(PlayerEvents.Moved);
     this.gameDispatcher.off(PlayerEvents.Added);
     this.gameDispatcher.off(PlayerEvents.Removed);
     this.gameDispatcher.stop();
@@ -107,6 +106,25 @@ class Game extends Phaser.Scene {
 
     if (this.cursors?.up.isDown && this.cursors?.down.isUp) this.fish?.setVelocityY(-300);
     if (this.cursors?.down.isDown && this.cursors?.up.isUp) this.fish?.setVelocityY(300);
+  }
+
+  addRandomBubbles = () => {
+    for (let bubbleCount = 0; bubbleCount < Phaser.Math.Between(0, 20); bubbleCount++) {
+      const pt = this.cameras.main.worldView.getRandomPoint();
+      const size = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2][Phaser.Math.Between(0, 14)];
+      const bubble = this.physics.add.image(pt.x, pt.y, 'bg-bubble')
+        .setScale(size)
+        .setVelocityY(-20)
+        .setGravityY(-(32 / [1, 2, 4][size]))
+        .setAlpha(0.4)
+        .setScrollFactor(1.0 - (size * 0.1));
+
+      this.tweens.add({
+        targets: bubble,
+        duration: Phaser.Math.Between(250, 2000),
+        alpha: { value: 1 },
+      });
+    }
   }
 }
 
