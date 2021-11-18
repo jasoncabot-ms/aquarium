@@ -2,6 +2,11 @@ import Phaser from 'phaser';
 import { GameDispatcher, Player } from '../GameDispatcher';
 import { availableFish } from './Main';
 
+enum PlayerEvents {
+  Added = 'PLAYER_ADDED',
+  Removed = 'PLAYER_REMOVED'
+}
+
 class Game extends Phaser.Scene {
   constructor() {
     super('GameScene');
@@ -30,12 +35,12 @@ class Game extends Phaser.Scene {
     // Handle multiplayer elements
     this.gameDispatcher.start();
 
-    this.gameDispatcher.on('PLAYER_ADDED', (player: Player) => {
+    this.gameDispatcher.on(PlayerEvents.Added, (player: Player) => {
       console.log(`Player with id ${player.id} joined...`);
       const other = this.add.sprite(player.x, player.y, 'seacreatures').play(player.fish);
       this.otherFish.push(other);
     });
-    this.gameDispatcher.on('PLAYER_REMOVED', (player: Player) => {
+    this.gameDispatcher.on(PlayerEvents.Removed, (player: Player) => {
       console.log(`Player with id ${player.id} left...`);
     });
 
@@ -79,6 +84,8 @@ class Game extends Phaser.Scene {
   }
 
   destroy() {
+    this.gameDispatcher.off(PlayerEvents.Added);
+    this.gameDispatcher.off(PlayerEvents.Removed);
     this.gameDispatcher.stop();
     this.time.removeEvent(this.timer!);
   }
