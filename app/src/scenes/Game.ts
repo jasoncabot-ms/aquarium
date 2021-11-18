@@ -4,7 +4,8 @@ import { availableFish } from './Main';
 
 enum PlayerEvents {
   Added = 'PLAYER_ADDED',
-  Removed = 'PLAYER_REMOVED'
+  Removed = 'PLAYER_REMOVED',
+  Moved = 'PLAYER_MOVED'
 }
 
 class Game extends Phaser.Scene {
@@ -20,7 +21,7 @@ class Game extends Phaser.Scene {
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | undefined
   timer: Phaser.Time.TimerEvent | undefined
 
-  otherFish: Phaser.GameObjects.Sprite[] = []
+  playerSprites: Map<string, Phaser.GameObjects.Sprite> = new Map();
 
   init(data: any) {
     this.selectedFish = availableFish[(data.selectedFishIndex || 0)].key;
@@ -37,11 +38,19 @@ class Game extends Phaser.Scene {
 
     this.gameDispatcher.on(PlayerEvents.Added, (player: Player) => {
       console.log(`Player with id ${player.id} joined...`);
-      const other = this.add.sprite(player.x, player.y, 'seacreatures').play(player.fish);
-      this.otherFish.push(other);
+      const other = this.playerSprites.get(player.id) || this.add.sprite(player.x, player.y, 'seacreatures').play(player.fish);
+      this.playerSprites.set(player.id, other);
+      other.setPosition(player.x, player.y);
     });
     this.gameDispatcher.on(PlayerEvents.Removed, (player: Player) => {
       console.log(`Player with id ${player.id} left...`);
+      const other = this.playerSprites.get(player.id);
+      this.playerSprites.delete(player.id);
+      other?.destroy(true);
+    });
+    this.gameDispatcher.on(PlayerEvents.Moved, (player: Player) => {
+      const sprite = this.playerSprites.get(player.id);
+      sprite?.setPosition(player.x, player.y);
     });
 
     // Fade in
@@ -50,7 +59,7 @@ class Game extends Phaser.Scene {
 
     // Setup sprites
     this.anims.create({ key: 'blueJellyfish', frames: this.anims.generateFrameNames('seacreatures', { prefix: 'blueJellyfish', end: 32, zeroPad: 4 }), repeat: -1 });
-		this.anims.create({ key: 'crab', frames: this.anims.generateFrameNames('seacreatures', { prefix: 'crab1', end: 25, zeroPad: 4 }), repeat: -1 })
+    this.anims.create({ key: 'crab', frames: this.anims.generateFrameNames('seacreatures', { prefix: 'crab1', end: 25, zeroPad: 4 }), repeat: -1 })
 
     this.fish = this.physics.add.sprite(this.cameras.main.centerX, this.cameras.main.centerY, 'seacreatures')
       .setVelocity(0, 0)
