@@ -1,12 +1,6 @@
 import Phaser from 'phaser';
-import { GameDispatcher, Player } from '../GameDispatcher';
+import { GameDispatcher, Player, PlayerEvents } from '../GameDispatcher';
 import { availableFish } from './Main';
-
-enum PlayerEvents {
-  Added = 'PLAYER_ADDED',
-  Removed = 'PLAYER_REMOVED',
-  Moved = 'PLAYER_MOVED'
-}
 
 class Game extends Phaser.Scene {
   constructor() {

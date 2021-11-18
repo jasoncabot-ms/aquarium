@@ -1,10 +1,17 @@
 import Phaser from 'phaser';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Player {
     id: string
     x: number
     y: number
     fish: string
+}
+
+enum PlayerEvents {
+    Added = 'PLAYER_ADDED',
+    Removed = 'PLAYER_REMOVED',
+    Moved = 'PLAYER_MOVED'
 }
 
 class GameDispatcher extends Phaser.Events.EventEmitter {
@@ -27,10 +34,10 @@ class GameDispatcher extends Phaser.Events.EventEmitter {
 
     addPlayer() {
         // TODO: this should come from WebSocket events
-        this.emit('PLAYER_ADDED', { id: '12345', x: 0, y: 0, fish: 'blueJellyfish' } as Player);
+        this.emit(PlayerEvents.Added, { id: uuidv4(), x: 0, y: 0, fish: 'blueJellyfish' } as Player);
     }
 }
 
-export { GameDispatcher };
+export { GameDispatcher, PlayerEvents };
 
 export type { Player };
