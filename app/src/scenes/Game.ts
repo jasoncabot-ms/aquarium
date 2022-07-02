@@ -93,13 +93,42 @@ class Game extends Phaser.Scene {
   }
 
   update() {
-    this.fish?.setVelocity(0);
+    if (!this.fish) return;
+    this.turnToFace(this.fish, this.input.activePointer);
 
-    if (this.cursors?.left.isDown && this.cursors?.right.isUp) this.fish?.setVelocityX(-300);
-    if (this.cursors?.right.isDown && this.cursors?.left.isUp) this.fish?.setVelocityX(300);
+    // Boosting
+    if (this.input.activePointer.isDown) {
+      const cameraAdjusted = this.cameras.main.getWorldPoint(this.input.activePointer.x, this.input.activePointer.y)
+      this.physics.accelerateTo(this.fish, cameraAdjusted.x, cameraAdjusted.y, 1000);
+    } else {
+      this.fish?.setAcceleration(0, 0);
+    }
 
-    if (this.cursors?.up.isDown && this.cursors?.down.isUp) this.fish?.setVelocityY(-300);
-    if (this.cursors?.down.isDown && this.cursors?.up.isUp) this.fish?.setVelocityY(300);
+    this.physics.velocityFromRotation(this.fish.rotation, this.fish.body.speed, this.fish.body.velocity);
+  }
+
+  turnToFace = (body: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody, pointer: Phaser.Input.Pointer) => {
+    if (!pointer.manager.isOver) {
+      // cancel any rotation as we left the canvas
+      body.setAngularVelocity(0);
+      return;
+    }
+
+    const cameraAdjusted = this.cameras.main.getWorldPoint(pointer.x, pointer.y)
+
+    var angleToPointer = Phaser.Math.Angle.Between(body.x, body.y, cameraAdjusted.x, cameraAdjusted.y) + (Math.PI / 2);
+    var angleDelta = Phaser.Math.Angle.Wrap(angleToPointer - body.rotation);
+
+    const ROTATION_SPEED = 2 * Math.PI;
+    const ROTATION_SPEED_DEGREES = Phaser.Math.RadToDeg(ROTATION_SPEED);
+    const TOLERANCE = 0.02 * ROTATION_SPEED;
+
+    if (Phaser.Math.Within(angleDelta, 0, TOLERANCE)) {
+      body.rotation = angleToPointer;
+      body.setAngularVelocity(0);
+    } else {
+      body.setAngularVelocity(Math.sign(angleDelta) * ROTATION_SPEED_DEGREES);
+    }
   }
 
   addRandomBubbles = () => {
